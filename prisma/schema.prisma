@@ -1,0 +1,78 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Dogs {
+  id                Int              @id @default(autoincrement())
+  username          String
+  email             String           @unique
+  password          String
+  name              String
+  race              String
+  birthday          DateTime
+  age               Int
+  poids             Int
+  gender            String
+  location          String
+  sterilization     Boolean
+  profile_picture   String
+  posts             Posts[]
+  likes             Likes[]
+  interest          Json
+  matched           Matchs[]         @relation("match")
+  matched_dog       Matchs[]         @relation("matched")
+  sent_messages     Messages[]       @relation("sender")
+  received_messages Messages[]       @relation("receiver")
+}
+
+model Matchs {
+  id             Int            @id @default(autoincrement())
+  dog1Id         Int
+  match_receiver Int
+  status         StatusRelation @default(WAITING)
+  created_at     DateTime       @default(now())
+  dog            Dogs           @relation(name: "match", fields: [dog1Id], references: [id])
+  dogMatched     Dogs           @relation(name: "matched", fields: [match_receiver], references: [id])
+}
+
+model Likes {
+  id         Int      @id @default(autoincrement())
+  dogId      Int
+  postId     Int
+  created_at DateTime @default(now())
+  dog        Dogs     @relation(fields: [dogId], references: [id])
+  post       Posts    @relation(fields: [postId], references: [id])
+}
+
+model Posts {
+  id        Int      @id @default(autoincrement())
+  dogId     Int
+  content   String
+  image_url String
+  createdAt DateTime @default(now())
+  likes     Likes[]
+  dog       Dogs     @relation(fields: [dogId], references: [id])
+}
+
+model Messages {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  content    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  sender   Dogs @relation(name: "sender", fields: [senderId], references: [id])
+  receiver Dogs @relation(name: "receiver", fields: [receiverId], references: [id])
+}
+
+enum StatusRelation {
+  MATCH
+  WAITING
+  REFUSED
+}
